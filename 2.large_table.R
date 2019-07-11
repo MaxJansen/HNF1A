@@ -387,3 +387,5 @@ p + geom_boxplot() + theme_minimal()
 p <-
   ggplot(Fulltable, aes(BatchName, Raw_reads_pc, fill =  BatchName))
 p + geom_boxplot() + theme_minimal()
+
+#This is a test

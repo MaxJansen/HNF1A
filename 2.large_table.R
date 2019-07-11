@@ -231,39 +231,6 @@ Fulltable$MultiMapping_pc <- Fulltable[,5]/Fulltable[,8]
 Fulltable$NoFeatures_pc <- Fulltable[,6]/Fulltable[,8]
 Fulltable$Unmapped_pc <- Fulltable[,7]/Fulltable[,8]
 
-#Some quick plots [Save for later reference, but move eventually]
-p <- ggplot(Fulltable, aes(BatchName, RawReads, fill =  BatchName)) 
-p + geom_boxplot() + theme_minimal()
-
-p <- ggplot(Fulltable, aes(BatchName, Assigned, fill =  BatchName)) 
-p + geom_boxplot() + theme_minimal()
-
-p <- ggplot(Fulltable, aes(BatchName, Unassigned_MultiMapping, fill =  BatchName)) 
-p + geom_boxplot() + theme_minimal()
-
-p <- ggplot(Fulltable, aes(BatchName, Unassigned_NoFeatures, fill =  BatchName)) 
-p + geom_boxplot() + theme_minimal()
-
-p <- ggplot(Fulltable, aes(BatchName, Unassigned_Unmapped, fill =  BatchName)) 
-p + geom_boxplot() + theme_minimal()
-
-p <- ggplot(Fulltable, aes(BatchName, RawSum, fill =  BatchName)) 
-p + geom_boxplot() + theme_minimal()
-
-p <- ggplot(Fulltable, aes(BatchName, Assigned_pc, fill =  BatchName)) 
-p + geom_boxplot() + theme_minimal()
-
-p <- ggplot(Fulltable, aes(BatchName, MultiMapping_pc, fill =  BatchName)) 
-p + geom_boxplot() + theme_minimal()
-
-p <- ggplot(Fulltable, aes(BatchName, NoFeatures_pc, fill =  BatchName)) 
-p + geom_boxplot() + theme_minimal()
-
-p <- ggplot(Fulltable, aes(BatchName, Unmapped_pc, fill =  BatchName)) 
-p + geom_boxplot() + theme_minimal()
-
-p <- ggplot(Fulltable, aes(BatchName, Raw_reads_pc, fill =  BatchName)) 
-p + geom_boxplot() + theme_minimal()
 
 ###    Part 3. Finished.    ###
 
@@ -304,4 +271,39 @@ p <- ggplot(Fullertable_ss_select, aes(BatchName, Genes1tpm, fill =  BatchName))
 p + geom_boxplot() + theme_minimal()
 
 p <- ggplot(Fullertable_ss_select, aes(BatchName, top100_reads_pc, fill =  BatchName)) 
+p + geom_boxplot() + theme_minimal()
+
+
+#Some quick plots [Save for later reference, but move eventually]
+p <- ggplot(Fulltable, aes(BatchName, RawReads, fill =  BatchName)) 
+p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fulltable, aes(BatchName, Assigned, fill =  BatchName)) 
+p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fulltable, aes(BatchName, Unassigned_MultiMapping, fill =  BatchName)) 
+p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fulltable, aes(BatchName, Unassigned_NoFeatures, fill =  BatchName)) 
+p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fulltable, aes(BatchName, Unassigned_Unmapped, fill =  BatchName)) 
+p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fulltable, aes(BatchName, RawSum, fill =  BatchName)) 
+p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fulltable, aes(BatchName, Assigned_pc, fill =  BatchName)) 
+p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fulltable, aes(BatchName, MultiMapping_pc, fill =  BatchName)) 
+p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fulltable, aes(BatchName, NoFeatures_pc, fill =  BatchName)) 
+p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fulltable, aes(BatchName, Unmapped_pc, fill =  BatchName)) 
+p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fulltable, aes(BatchName, Raw_reads_pc, fill =  BatchName)) 
 p + geom_boxplot() + theme_minimal()

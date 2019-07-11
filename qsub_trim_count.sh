@@ -1,2 +1,2 @@
 #!/bin/bash
-qsub -V -cwd -N count_fastq -q short.qc -e count_fastq.err -o count_fastq.out batches_count_fastq.sh
+qsub -V -cwd -N count_trim -q short.qc -e count_trim.err -o count_trim.out batches_count_trim.sh

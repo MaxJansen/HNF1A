@@ -78,9 +78,76 @@ for (i in Batches) {
   All_batches <- rbind(All_batches, i)
 }
 
-#Save All_batches.
+# Do this for trimmed reads as well
+# Import reads from both directions, change working directory accordingly
+setwd("~/Oxford 2.0/HNF1A/Tables/trimmed_read_count/")
+trim_count_files <- list.files(path = " .", pattern = "Batch")
+for (i in 1:length(trim_count_files))
+  assign(trim_count_files[i],
+         read.csv(trim_count_files[i], header = FALSE))
+
+# Loop through read directions 1 and 2 to see if they have equal raw read counts
+# Do a bit of cleaning to get Batch numbers without read direction
+Batches <- ls()
+Batches <- Batches[grep(".txt", Batches)]
+Batches <- Batches[grep("trim", Batches)]
+Batches_1 <- Batches[grep("_1.txt", Batches)]
+Batches_2 <- Batches[grep("_2.txt", Batches)]
+Batches <- gsub("_1.txt", "", Batches)
+Batches <- gsub("_2.txt", "", Batches)
+Batches <- unique(Batches)
+
+# Now you have unique Batch numbers, loop through paired Batch read directions and compare
+for (i in Batches_1) {
+  Batchreadname1 <- get(i)
+  Batchreadname2 <- get(gsub("_1.txt", "_2.txt", i))
+  print(i)
+  print(gsub("_1.txt", "_2.txt", i))
+  compare_reads1_2(Batchreadname1, Batchreadname2)
+}
+
+# Equal read numbers for both directions in all batches, so:
+# Keep numerical values from reads 1 only, move values from these rows to new column
+# Divide these lines counts by 4 for actual trim_reads column number
+
+# This function makes clean tables and performs calculation
+trimread_2_column <- function(Batch_info, Batch_name) {
+  read_names <- Batch_info[seq(1, nrow(Batch_info), 2), ]
+  read_names <- gsub("./", "", read_names)
+  read_names <- gsub("_1.fastq.gz", "", read_names)
+  trim_reads <- Batch_info[seq(2, nrow(Batch_info), 2), ]
+  Batch_new <- data.frame(read_names, trim_reads)
+  colnames(Batch_new) <- c("ReadName", "TrimReads")
+  Batch_new$TrimReads <- as.numeric(as.character(Batch_new$TrimReads))
+  Batch_new$TrimReads <-
+    lapply(Batch_new$TrimReads, function(x)
+      x / 4)
+  Batch_new$Batchname <- Batch_name
+  return(Batch_new)
+}
+
+All_trim <- data.frame()
+for (i in Batches) {
+  i <- trimread_2_column(get(paste(i, "_1.txt", sep = "")), i)
+  All_trim <- rbind(All_trim, i)
+}
+
+#Merge these tables
+All_rawtrim <- 
+  merge(All_batches, All_trim, by.x = "ReadName", by.y = "ReadName")
+All_rawtrim <- All_rawtrim[, c(1, 2, 4, 3)]
+colnames(All_rawtrim)[4] <- "Batchname"
+#Save All_batches and All_trim
+setwd("~/Oxford 2.0/HNF1A/Tables")
 All_batches <- as.data.frame(All_batches)
-write.csv(All_batches, file = "All_batches_raw_reads.txt", row.names = TRUE)
+write.csv(apply(All_batches, 2, as.character),
+          file = "All_batches_raw_reads.txt",
+          row.names = TRUE)
+
+All_trim <- as.data.frame(All_trim)
+write.csv(apply(All_trim, 2, as.character),
+          file = "All_batches_trim_reads.txt",
+          row.names = TRUE)
 
 ###    Part 1. Finished.    ###
 
@@ -118,11 +185,11 @@ RG_infoAll <- do.call(rbind, my.list)
 # Tested if all values in RG_infoAll$V1 are unique, they are, so can be mapped directly to All_batches
 # Link read filename to sample name
 Mastertable <-
-  merge(RG_infoAll, All_batches, by.x = "V1", by.y = "ReadName")
-Mastertable <- Mastertable[, -4]
-Mastertable <- Mastertable[, c(2, 5, 1, 3, 4)]
+  merge(RG_infoAll, All_rawtrim, by.x = "V1", by.y = "ReadName")
+Mastertable <- Mastertable[, -7]
+Mastertable <- Mastertable[, c(2, 4, 1, 3, 5, 6)]
 colnames(Mastertable) <-
-  c("Name", "BatchName", "ReadNumber", "Date", "RawReads")
+  c("Name", "BatchName", "ReadNumber", "Date", "RawReads", "TrimReads")
 Mastertable$Name <- gsub('SM="', "", Mastertable$Name)
 Mastertable$Name <- gsub('"', "", Mastertable$Name)
 
@@ -292,8 +359,7 @@ tpm.list <-
        tpm_batch3.txt,
        tpm_batch4.txt)
 tpm_df <- do.call(rbind, tpm.list)
-tpm_df <-
-  as.data.frame(unlist(str_split_fixed(tpm_df[, 1], "\t", 2)))
+tpm_df <- as.data.frame(unlist(str_split_fixed(tpm_df[, 1], "\t", 2)))
 colnames(tpm_df) <- c("Name", "Genes1tpm")
 tpm_df$Genes1tpm <- as.numeric(as.character(tpm_df$Genes1tpm))
 tpm_df <- aggregate(Genes1tpm ~ Name, data = tpm_df, FUN = sum)
@@ -314,14 +380,12 @@ gene_counts_df$top100_reads_pc <-
 gene_counts_df <-
   aggregate(top100_reads_pc ~ Name, data = gene_counts_df, FUN = mean)
 
-Fullerbatch <-
-  merge(Fulltable,
+Fullerbatch <- merge(Fulltable,
         tpm_df,
         by.x = "Name",
         by.y = "Name",
         all.x = TRUE)
-Fullertable <-
-  merge(
+Fullertable <-merge(
     Fullerbatch,
     gene_counts_df,
     by.x = "Name",
@@ -332,13 +396,11 @@ Fullertable <-
 #Make a subset for top100_pc comparison and a subset for 1tpm comparison
 Fullertable_ss_select <-
   Fullertable[grep("singlecell", Fullertable$Name), ]
-p <-
-  ggplot(Fullertable_ss_select,
+p <- ggplot(Fullertable_ss_select,
          aes(BatchName, Genes1tpm, fill =  BatchName))
 p + geom_boxplot() + theme_minimal()
 
-p <-
-  ggplot(Fullertable_ss_select,
+p <- ggplot(Fullertable_ss_select,
          aes(BatchName, top100_reads_pc, fill =  BatchName))
 p + geom_boxplot() + theme_minimal()
 
@@ -350,42 +412,35 @@ p + geom_boxplot() + theme_minimal()
 p <- ggplot(Fulltable, aes(BatchName, Assigned, fill =  BatchName))
 p + geom_boxplot() + theme_minimal()
 
-p <-
-  ggplot(Fulltable,
+p <- ggplot(Fulltable,
          aes(BatchName, Unassigned_MultiMapping, fill =  BatchName))
 p + geom_boxplot() + theme_minimal()
 
-p <-
-  ggplot(Fulltable,
+p <- ggplot(Fulltable,
          aes(BatchName, Unassigned_NoFeatures, fill =  BatchName))
 p + geom_boxplot() + theme_minimal()
 
-p <-
-  ggplot(Fulltable,
+p <- ggplot(Fulltable,
          aes(BatchName, Unassigned_Unmapped, fill =  BatchName))
 p + geom_boxplot() + theme_minimal()
 
 p <- ggplot(Fulltable, aes(BatchName, RawSum, fill =  BatchName))
 p + geom_boxplot() + theme_minimal()
 
-p <-
-  ggplot(Fulltable, aes(BatchName, Assigned_pc, fill =  BatchName))
+p <- ggplot(Fulltable, aes(BatchName, Assigned_pc, fill =  BatchName))
 p + geom_boxplot() + theme_minimal()
 
-p <-
-  ggplot(Fulltable, aes(BatchName, MultiMapping_pc, fill =  BatchName))
+p <- ggplot(Fulltable, aes(BatchName, MultiMapping_pc, fill =  BatchName))
 p + geom_boxplot() + theme_minimal()
 
 p <-
   ggplot(Fulltable, aes(BatchName, NoFeatures_pc, fill =  BatchName))
 p + geom_boxplot() + theme_minimal()
 
-p <-
-  ggplot(Fulltable, aes(BatchName, Unmapped_pc, fill =  BatchName))
+p <- ggplot(Fulltable, aes(BatchName, Unmapped_pc, fill =  BatchName))
 p + geom_boxplot() + theme_minimal()
 
-p <-
-  ggplot(Fulltable, aes(BatchName, Raw_reads_pc, fill =  BatchName))
+p <- ggplot(Fulltable, aes(BatchName, Raw_reads_pc, fill =  BatchName))
 p + geom_boxplot() + theme_minimal()
 
 #This is a test

@@ -193,14 +193,30 @@ colnames(Mastertable) <-
 Mastertable$Name <- gsub('SM="', "", Mastertable$Name)
 Mastertable$Name <- gsub('"', "", Mastertable$Name)
 
-#Test to see if unique within batches. Answer: No.
-#They are unique between batches, see quick_check_unique.R script for proof!
+# Test to see if unique within batches. Answer: No.
+# They are unique between batches, see quick_check_unique.R script for proof!
 
+# A table of RawReads and Trimmed reads before Batch2 and Batch2second are aggregated:
+Mastertable$RawReads <- as.numeric(Mastertable$RawReads)
+Mastertable$TrimReads <- as.numeric(Mastertable$TrimReads)
+Mastertable$TrimRaw_pc <- Mastertable[, 6] / Mastertable[, 5]
+
+
+p <- ggplot(Mastertable, aes(BatchName, RawReads, fill =  BatchName))
+p + geom_boxplot() + theme_minimal()
+
+p <-
+  ggplot(Mastertable, aes(BatchName, TrimReads, fill =  BatchName))
+p + geom_boxplot() + theme_minimal()
+
+p <-
+  ggplot(Mastertable, aes(BatchName, TrimRaw_pc, fill =  BatchName))
+p + geom_boxplot() + theme_minimal()
 ###    Part 2. Finished.    ###
 
 
 ###    Part 3. Add quantitative info from summary tables.    ###
-###    This is some of the required quantitative data. (TPM and Trimmed not included)
+###    This is some of the required quantitative data. (TPM and not included)
 
 # Import the quantitative data separately. This is a function that does that:
 create_df_list <- function(directory) {
@@ -269,7 +285,7 @@ Mastertable$BatchName[Mastertable$BatchName == "Batch2second"] <-
 Mastertable$Name <- gsub("-", ".", Mastertable$Name)
 Mastertable$RawReads <- as.numeric(Mastertable$RawReads)
 Mastertable_agg <-
-  aggregate(RawReads ~ Name + BatchName, data = Mastertable, FUN = sum)
+  aggregate(cbind(RawReads, TrimReads) ~ Name + BatchName, data = Mastertable, FUN = sum)
 
 #Merge for each separate batch.
 Fullbatch1 <-
@@ -309,7 +325,7 @@ Fullbatch4 <-
 Fulltable <- rbind(Fullbatch1, Fullbatch2, Fullbatch3, Fullbatch4)
 
 #Check : Is RawReads about the same as rowsum?
-Fulltable$RawSum <- rowSums(Fulltable[, 4:14])
+Fulltable$RawSum <- rowSums(Fulltable[, 5:14])
 ratio_df <-
   as.data.frame(cbind(Fulltable$RawReads, Fulltable$RawSum))
 colnames(ratio_df) <- c("RawReads", "RawSum")
@@ -330,11 +346,12 @@ Fulltable$Unassigned_Nonjunction <- NULL
 Fulltable$Unassigned_Duplicate <- NULL
 
 #Create 'pc' columns
-Fulltable$Raw_reads_pc <- Fulltable[, 3] / Fulltable[, 8]
-Fulltable$Assigned_pc <- Fulltable[, 4] / Fulltable[, 8]
-Fulltable$MultiMapping_pc <- Fulltable[, 5] / Fulltable[, 8]
-Fulltable$NoFeatures_pc <- Fulltable[, 6] / Fulltable[, 8]
-Fulltable$Unmapped_pc <- Fulltable[, 7] / Fulltable[, 8]
+Fulltable$Raw_reads_pc <- Fulltable[, 9] / Fulltable[, 3]
+Fulltable$Assigned_pc <- Fulltable[, 5] / Fulltable[, 3]
+Fulltable$MultiMapping_pc <- Fulltable[, 6] / Fulltable[, 3]
+Fulltable$NoFeatures_pc <- Fulltable[, 7] / Fulltable[, 3]
+Fulltable$Unmapped_pc <- Fulltable[, 8] / Fulltable[, 3]
+Fulltable$Trim_pc <- Fulltable[, 4] / Fulltable[, 3]
 
 ###    Part 3. Finished.    ###
 
@@ -362,7 +379,7 @@ tpm_df <- do.call(rbind, tpm.list)
 tpm_df <- as.data.frame(unlist(str_split_fixed(tpm_df[, 1], "\t", 2)))
 colnames(tpm_df) <- c("Name", "Genes1tpm")
 tpm_df$Genes1tpm <- as.numeric(as.character(tpm_df$Genes1tpm))
-tpm_df <- aggregate(Genes1tpm ~ Name, data = tpm_df, FUN = sum)
+tpm_df <- aggregate(Genes1tpm ~ Name, data = tpm_df, FUN = mean)
 tpm_df$Name <- as.character(tpm_df$Name)
 gene_counts_list <-
   list(
@@ -393,6 +410,18 @@ Fullertable <-merge(
     all.x = TRUE
   )
 
+
+# Stop here and save a few large tables:
+# 1) Fullertable:
+getwd()
+setwd("~/Oxford 2.0/HNF1A/Tables/")
+write.table(Fullertable, file = "Fullertable.txt", row.names = FALSE)
+
+# Make columns for better plotting:
+Fullertable$cellLine <- Fullertable$Name
+Fullertable$cellLine <- strsplit(Fullertable$cellLine, '.X')
+Fullertable$Stage <- lapply(Fullertable$cellLine, `[[`, 2)
+RG_infoAll$Stage <- unlist(RG_infoAll$Stage)
 #Make a subset for top100_pc comparison and a subset for 1tpm comparison
 Fullertable_ss_select <-
   Fullertable[grep("singlecell", Fullertable$Name), ]
@@ -443,4 +472,4 @@ p + geom_boxplot() + theme_minimal()
 p <- ggplot(Fulltable, aes(BatchName, Raw_reads_pc, fill =  BatchName))
 p + geom_boxplot() + theme_minimal()
 
-#This is a test
+

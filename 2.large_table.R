@@ -469,6 +469,13 @@ Fullertable$Differentiation <- unlist(Fullertable$Differentiation)
 Fullertable$Stage <- unlist(Fullertable$Stage)
 Fullertable$cellLine <- unlist(Fullertable$cellLine)
 
+# Add correction column:
+Pro291fsinsC_row <- Fullertable$cellLine %in% c("SFC012.0420CLN","SFC012.0420CL4")
+Fullertable$Correction[Pro291fsinsC_row] <- "Pro291fsinsC/+" 
+Corrected_row <- Fullertable$cellLine %in% c("SFC012.C14222", "SFC012.N19218")
+Fullertable$Correction[Corrected_row] <- "Corrected/+"
+SB_row	<- Fullertable$cellLine %in% "SBAD3.1"
+Fullertable$Correction[SB_row] <- "+/+(WT)"
 # Stop here and save a few large tables:
 # 1) Fullertable:
 setwd("~/Oxford 2.0/HNF1A/Tables/")
@@ -481,6 +488,8 @@ Fullertable_control_select <-
   Fullertable[grep("singlecell", Fullertable$sampleType, invert = TRUE), ]
 Fullertable_control_select$BatchType <- paste(Fullertable_control_select$BatchName, 
                                               Fullertable_control_select$sampleType, sep = ' ')
+
+### Boxplots per Batch ###
 
 # Boxplots for assigned:
 p <- ggplot(Fullertable_ss_select,
@@ -534,21 +543,142 @@ p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
   vjust = 0.9),
   axis.title.x = element_blank())
 
+# Boxplots for No Features:
 p <- ggplot(Fullertable_ss_select,
-            aes(Sample, Unmapped_pc, fill =  Sample))
+            aes(BatchName, Unassigned_NoFeatures , fill =  BatchName))
 p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fullertable_ss_select,
+            aes(BatchName, NoFeatures_pc, fill =  BatchName))
+p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fullertable_control_select,
+            aes(BatchType, Unassigned_NoFeatures, fill =  BatchType))
+p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
+  angle = 45,
+  hjust = 1,
+  vjust = 0.9
+),
+axis.title.x = element_blank())
+
+p <- ggplot(Fullertable_control_select,
+            aes(BatchType, NoFeatures_pc, fill =  BatchType))
+p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
+  angle = 45,
+  hjust = 1,
+  vjust = 0.9),
+  axis.title.x = element_blank())
+
+# Boxplots for Unmapped:
+p <- ggplot(Fullertable_ss_select,
+            aes(BatchName, Unassigned_Unmapped , fill =  BatchName))
+p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fullertable_ss_select,
+            aes(BatchName, Unmapped_pc, fill =  BatchName))
+p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fullertable_control_select,
+            aes(BatchType, Unassigned_Unmapped, fill =  BatchType))
+p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
+  angle = 45,
+  hjust = 1,
+  vjust = 0.9
+),
+axis.title.x = element_blank())
+
+p <- ggplot(Fullertable_control_select,
+            aes(BatchType, Unmapped_pc, fill =  BatchType))
+p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
+  angle = 45,
+  hjust = 1,
+  vjust = 0.9),
+  axis.title.x = element_blank())
+
+# gene count data: 1TPM and %top100
+p <- ggplot(Fullertable_ss_select,
+            aes(BatchName, Genes1tpm, fill =  BatchName))
+p + geom_boxplot() + theme_minimal() 
+
+p <- ggplot(Fullertable_control_select,
+            aes(BatchType, Genes1tpm, fill =  BatchType))
+p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
+  angle = 45,
+  hjust = 1,
+  vjust = 0.9),
+  axis.title.x = element_blank())
+
+
+p <- ggplot(Fullertable_ss_select,
+            aes(BatchName, top100_reads_pc, fill =  BatchName))
+p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fullertable_control_select,
+            aes(BatchType, top100_reads_pc, fill =  BatchType))
+p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
+  angle = 45,
+  hjust = 1,
+  vjust = 0.9),
+  axis.title.x = element_blank())
+
+### End of per batch boxplots ###
+
+### By correction ### 
+
+# Trimmed reads
+p <- ggplot(Fullertable_ss_select,
+            aes(Correction, TrimReads, fill =  Correction))
+p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fullertable_control_select,
+            aes(Correction, TrimReads, fill =  Correction))
+p + geom_boxplot() + theme_minimal()
+
+# Genes > 1TPM
+p <- ggplot(Fullertable_ss_select,
+            aes(Correction, Genes1tpm, fill =  Correction))
+p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fullertable_control_select,
+            aes(Correction, Genes1tpm, fill =  Correction))
+p + geom_boxplot() + theme_minimal()
+
+# Top 100
+p <- ggplot(Fullertable_ss_select,
+            aes(Correction, top100_reads_pc, fill =  Correction))
+p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fullertable_control_select,
+            aes(Correction, top100_reads_pc, fill =  Correction))
+p + geom_boxplot() + theme_minimal()
+
+### End of by correction ###
+
+### Per sample ###
+p <- ggplot(Fullertable_ss_select,
+            aes(Sample, TrimReads, fill =  Sample))
+p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
+  angle = 90,
+  hjust = 1,
+  vjust = 0.9),
+  axis.title.x = element_blank())
 
 p <- ggplot(Fullertable_ss_select,
             aes(Sample, Genes1tpm, fill =  Sample))
-p + geom_boxplot() + theme_minimal()
+p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
+  angle = 90,
+  hjust = 1,
+  vjust = 0.9),
+  axis.title.x = element_blank())
 
 p <- ggplot(Fullertable_ss_select,
             aes(Sample, top100_reads_pc, fill =  Sample))
-p + geom_boxplot() + theme_minimal()
+p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
+  angle = 90,
+  hjust = 1,
+  vjust = 0.9),
+  axis.title.x = element_blank())
 
-p <- ggplot(Fullertable_ss_select,
-            aes(Sample, Unmapped_pc, fill =  Sample))
-p + geom_boxplot() + theme_minimal()
 
 
 

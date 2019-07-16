@@ -36,11 +36,39 @@ prot_coding_reads_pc=apply(gene_counts[,2:ncol(gene_counts)],2, function(x) sum(
 stats=data.frame(name=colnames(summary), category=sapply(strsplit(colnames(summary), split="_"), function(x) x[3]), plate=sapply(strsplit(colnames(summary), split="_"), function(x) x[1]), well=sapply(strsplit(colnames(summary), split="_"), function(x) x[2]), raw_reads=colSums(summary), reads_assigned=as.numeric(summary[11,]), reads_assigned_pc= as.numeric(summary[11,])/colSums(summary), reads_unmapped=as.numeric(summary[6,]),  reads_unmapped_pc= as.numeric(summary[6,])/colSums(summary), reads_nofeatures=as.numeric(summary[7,]), reads_nofeatures_pc=as.numeric(summary[7,])/colSums(summary), reads_multimap=as.numeric(summary[10,]), reads_multimap_pc= as.numeric(summary[10,])/colSums(summary) , top100g_reads_pc = reads_pc, genes_1read=as.numeric(colSums(gene_counts[,2:ncol(gene_counts)]>=1)), genes_1tpm=as.numeric(colSums(tpm_counts[,2:ncol(tpm_counts)]>=1)), MT_reads_pc=MT_reads_pc, rRNA_reads_pc=rRNA_reads_pc, prot_coding_reads_pc=prot_coding_reads_pc, INS_cells=as.numeric(tpm_counts[tpm_counts$GeneName=="INS",2:ncol(tpm_counts)]), GCG_cells=as.numeric(tpm_counts[tpm_counts$GeneName=="GCG",2:ncol(tpm_counts)]), NKX6_cells=as.numeric(tpm_counts[tpm_counts$GeneName=="NKX6-1",2:ncol(tpm_counts)]), PDX1_cells = as.numeric(tpm_counts[tpm_counts$GeneName=="PDX1",2:ncol(tpm_counts)]))
 
 ### for SB_Ad3 - test:
-stats=data.frame(name=colnames(summary), sample=sapply(strsplit(colnames(summary), split="_"), function(x) x[2]), 
-category=sapply(strsplit(colnames(summary), split="_"), function(x) x[3]), plate=sapply(strsplit(colnames(summary), split="_"), function(x) x[4]), 
-raw_reads=colSums(summary), reads_assigned=as.numeric(summary[11,]), reads_assigned_pc= as.numeric(summary[11,])/colSums(summary), reads_unmapped=as.numeric(summary[6,]),  reads_unmapped_pc= as.numeric(summary[6,])/colSums(summary), reads_nofeatures=as.numeric(summary[7,]), reads_nofeatures_pc=as.numeric(summary[7,])/colSums(summary), reads_multimap=as.numeric(summary[10,]), reads_multimap_pc= as.numeric(summary[10,])/colSums(summary) , top100g_reads_pc = reads_pc, genes_1read=as.numeric(colSums(gene_counts[,2:ncol(gene_counts)]>=1)), genes_1tpm=as.numeric(colSums(tpm_counts[,2:ncol(tpm_counts)]>=1)), MT_reads_pc=MT_reads_pc, rRNA_reads_pc=rRNA_reads_pc, prot_coding_reads_pc=prot_coding_reads_pc, INS_cells=as.numeric(tpm_counts[tpm_counts$GeneName=="INS",2:ncol(tpm_counts)]), GCG_cells=as.numeric(tpm_counts[tpm_counts$GeneName=="GCG",2:ncol(tpm_counts)]), NKX6_cells=as.numeric(tpm_counts[tpm_counts$GeneName=="NKX6-1",2:ncol(tpm_counts)]), PDX1_cells = as.numeric(tpm_counts[tpm_counts$GeneName=="PDX1",2:ncol(tpm_counts)]))
+stats = data.frame(
+  name = colnames(summary),
+  sample = sapply(strsplit(colnames(summary), split = "_"), function(x)
+    x[2]),
+  category = sapply(strsplit(colnames(summary), split = "_"), function(x)
+    x[3]),
+  plate = sapply(strsplit(colnames(summary), split = "_"), function(x)
+    x[4]),
+  raw_reads = colSums(summary),
+  reads_assigned = as.numeric(summary[11, ]),
+  reads_assigned_pc = as.numeric(summary[11, ]) / colSums(summary),
+  reads_unmapped = as.numeric(summary[6, ]),
+  reads_unmapped_pc = as.numeric(summary[6, ]) / colSums(summary),
+  reads_nofeatures = as.numeric(summary[7, ]),
+  reads_nofeatures_pc = as.numeric(summary[7, ]) / colSums(summary),
+  reads_multimap = as.numeric(summary[10, ]),
+  reads_multimap_pc = as.numeric(summary[10, ]) / colSums(summary) ,
+  top100g_reads_pc = reads_pc,
+  genes_1read = as.numeric(colSums(gene_counts[, 2:ncol(gene_counts)] >= 1)),
+  genes_1tpm = as.numeric(colSums(tpm_counts[, 2:ncol(tpm_counts)] >= 1)),
+  MT_reads_pc = MT_reads_pc,
+  rRNA_reads_pc = rRNA_reads_pc,
+  prot_coding_reads_pc = prot_coding_reads_pc,
+  INS_cells = as.numeric(tpm_counts[tpm_counts$GeneName == "INS", 2:ncol(tpm_counts)]),
+  GCG_cells = as.numeric(tpm_counts[tpm_counts$GeneName == "GCG", 2:ncol(tpm_counts)]),
+  NKX6_cells = as.numeric(tpm_counts[tpm_counts$GeneName == "NKX6-1", 2:ncol(tpm_counts)]),
+  PDX1_cells = as.numeric(tpm_counts[tpm_counts$GeneName == "PDX1", 2:ncol(tpm_counts)])
+)
 
-write.table(stats, paste0(base,".map_qc_stats.txt"),sep="\t",quote=F)
+write.table(stats,
+            paste0(base, ".map_qc_stats.txt"),
+            sep = "\t",
+            quote = F)
 
 
 #### make some boxplots of the data:

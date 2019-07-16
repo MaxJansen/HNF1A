@@ -78,6 +78,12 @@ for (i in Batches) {
   All_batches <- rbind(All_batches, i)
 }
 
+All_batches$RawReads <- as.numeric(All_batches$RawReads)
+
+# Plot raw reads before aggregating
+p <- ggplot(All_batches, aes(Batchname, RawReads, fill =  Batchname))
+p + geom_boxplot() + theme_minimal()
+
 # Do this for trimmed reads as well
 # Import reads from both directions, change working directory accordingly
 setwd("~/Oxford 2.0/HNF1A/Tables/trimmed_read_count/")
@@ -197,7 +203,6 @@ Mastertable$Name <- gsub('"', "", Mastertable$Name)
 # They are unique between batches, see quick_check_unique.R script for proof!
 
 # A table of RawReads and Trimmed reads before Batch2 and Batch2second are aggregated:
-Mastertable$RawReads <- as.numeric(Mastertable$RawReads)
 Mastertable$TrimReads <- as.numeric(Mastertable$TrimReads)
 Mastertable$TrimRaw_pc <- Mastertable[, 6] / Mastertable[, 5]
 
@@ -281,11 +286,30 @@ Batch4_qdf <- format_quant_list(Batch4_df_list)
 Mastertable$BatchName[Mastertable$BatchName == "Batch2second"] <-
   "Batch2"
 
-#First aggregate RawReads(numeric) for duplicated(Name) rows, then merge.
+# First aggregate RawReads(numeric) for duplicated(Name) rows, then merge.
 Mastertable$Name <- gsub("-", ".", Mastertable$Name)
 Mastertable$RawReads <- as.numeric(Mastertable$RawReads)
 Mastertable_agg <-
   aggregate(cbind(RawReads, TrimReads) ~ Name + BatchName, data = Mastertable, FUN = sum)
+
+# Plot aggregated RawReads:
+p <- ggplot(Mastertable_agg, aes(BatchName, RawReads, fill =  BatchName))
+p + geom_boxplot() + theme_minimal()
+
+# Select controls and SC to see batch differences
+Master_agg_control_select <-
+  Mastertable_agg[grep("singlecell", Mastertable_agg$Name, invert = TRUE ), ]
+
+p <- ggplot(Master_agg_control_select, aes(BatchName, RawReads, fill =  BatchName))
+p + geom_boxplot() + theme_minimal()
+
+Master_agg_ss_select <-
+  Mastertable_agg[grep("singlecell", Mastertable_agg$Name), ]
+
+p <- ggplot(Master_agg_ss_select, aes(BatchName, RawReads, fill =  BatchName))
+p + geom_boxplot() + theme_minimal()
+
+
 
 #Merge for each separate batch.
 Fullbatch1 <-
@@ -325,11 +349,11 @@ Fullbatch4 <-
 Fulltable <- rbind(Fullbatch1, Fullbatch2, Fullbatch3, Fullbatch4)
 
 #Check : Is RawReads about the same as rowsum?
-Fulltable$RawSum <- rowSums(Fulltable[, 5:14])
+Fulltable$RawSum <- rowSums(Fulltable[, 5:15])
 ratio_df <-
-  as.data.frame(cbind(Fulltable$RawReads, Fulltable$RawSum))
-colnames(ratio_df) <- c("RawReads", "RawSum")
-ratio_df$RawRatio <- ratio_df[, 1] / ratio_df[, 2]
+  as.data.frame(cbind(Fulltable$TrimReads, Fulltable$RawSum))
+colnames(ratio_df) <- c("TrimReads", "RawSum")
+ratio_df$TrimRatio <- ratio_df[, 2] / ratio_df[, 1]
 
 #Find extreme rows (somewhat arbitrary numbers, but indicative):
 ratio_df[(ratio_df$RawRatio > 1.01), ]
@@ -337,20 +361,19 @@ ratio_df[(ratio_df$RawRatio < 1), ]
 
 #Summary check passed. Ratios near 1.
 #Remove Irrelevant columns
-Fulltable$Unassigned_Ambiguity <- NULL
 Fulltable$Unassigned_MappingQuality <- NULL
 Fulltable$Unassigned_FragmentLength <- NULL
-Fulltable$Unassigned_Chimera <- NULL
 Fulltable$Unassigned_Secondary <- NULL
 Fulltable$Unassigned_Nonjunction <- NULL
 Fulltable$Unassigned_Duplicate <- NULL
 
 #Create 'pc' columns
-Fulltable$Raw_reads_pc <- Fulltable[, 9] / Fulltable[, 3]
-Fulltable$Assigned_pc <- Fulltable[, 5] / Fulltable[, 3]
-Fulltable$MultiMapping_pc <- Fulltable[, 6] / Fulltable[, 3]
-Fulltable$NoFeatures_pc <- Fulltable[, 7] / Fulltable[, 3]
-Fulltable$Unmapped_pc <- Fulltable[, 8] / Fulltable[, 3]
+Fulltable$Raw_sum_pc <- Fulltable[, 11] / Fulltable[, 4]
+Fulltable$Assigned_pc <- Fulltable[, 5] / Fulltable[, 4]
+Fulltable$Ambiguity_pc <- Fulltable[, 6] / Fulltable[, 4]
+Fulltable$Multimapping_pc <- Fulltable[, 7] / Fulltable[, 4]
+Fulltable$NoFeatures_pc <- Fulltable[, 8] / Fulltable[, 4]
+Fulltable$Unmapped_pc <- Fulltable[, 9] / Fulltable[, 4]
 Fulltable$Trim_pc <- Fulltable[, 4] / Fulltable[, 3]
 
 ###    Part 3. Finished.    ###
@@ -411,26 +434,195 @@ Fullertable <-merge(
   )
 
 
-# Stop here and save a few large tables:
-# 1) Fullertable:
-getwd()
-setwd("~/Oxford 2.0/HNF1A/Tables/")
-write.table(Fullertable, file = "Fullertable.txt", row.names = FALSE)
+
 
 # Make columns for better plotting:
 Fullertable$cellLine <- Fullertable$Name
 Fullertable$cellLine <- strsplit(Fullertable$cellLine, '.X')
 Fullertable$Stage <- lapply(Fullertable$cellLine, `[[`, 2)
-RG_infoAll$Stage <- unlist(RG_infoAll$Stage)
-#Make a subset for top100_pc comparison and a subset for 1tpm comparison
+Fullertable$Stage <- unlist(Fullertable$Stage)
+
+
+
+Fullertable$Stage <- as.character(Fullertable$Stage)
+Fullertable$Stage <- strsplit(Fullertable$Stage, "[.]")
+Fullertable$Differentiation <- lapply(Fullertable$Stage, `[[`, 1)
+Fullertable$cellLine <- lapply(Fullertable$cellLine, `[[`, 1)
+
+#Rename accordingly, the dash in some SFC012N19218 lines, 
+#made it seem as if there was another unique cell line.
+SFC012_N19218_row <- Fullertable$cellLine == "SFC012N19218"
+Fullertable$cellLine[SFC012_N19218_row] <- "SFC012.N19218"
+
+#Keep the actual 'Stage' part from the Stage column, also keep the 'sampleType'
+Fullertable$Stage <- lapply(Fullertable$Stage, `[[`, 2)
+Fullertable$Stage <- as.character(Fullertable$Stage)
+Fullertable$Stage <- strsplit(Fullertable$Stage, '_')
+Fullertable$sampleType <- lapply(Fullertable$Stage, tail, n=1)
+Fullertable$Stage <- lapply(Fullertable$Stage, `[[`, 1)
+
+Fullertable$Sample  <- paste(Fullertable$cellLine, Fullertable$Differentiation, sep = "_X")
+Fullertable$Sample  <- paste(Fullertable$Sample, Fullertable$Stage, sep = "_")
+Fullertable$Sample <- paste(Fullertable$Sample, Fullertable$sampleType, sep = "_")
+Fullertable$sampleType <- unlist(Fullertable$sampleType)
+Fullertable$Differentiation <- unlist(Fullertable$Differentiation)
+Fullertable$Stage <- unlist(Fullertable$Stage)
+Fullertable$cellLine <- unlist(Fullertable$cellLine)
+
+# Stop here and save a few large tables:
+# 1) Fullertable:
+setwd("~/Oxford 2.0/HNF1A/Tables/")
+write.table(Fullertable, file = "Fullertable.txt", row.names = FALSE)
+
+#Select single cells and controls
 Fullertable_ss_select <-
-  Fullertable[grep("singlecell", Fullertable$Name), ]
+  Fullertable[grep("singlecell", Fullertable$sampleType), ]
+Fullertable_control_select <-
+  Fullertable[grep("singlecell", Fullertable$sampleType, invert = TRUE), ]
+Fullertable_control_select$BatchType <- paste(Fullertable_control_select$BatchName, 
+                                              Fullertable_control_select$sampleType, sep = ' ')
+
+# Boxplots for assigned:
 p <- ggplot(Fullertable_ss_select,
-         aes(BatchName, Genes1tpm, fill =  BatchName))
+            aes(BatchName, Assigned, fill =  BatchName))
 p + geom_boxplot() + theme_minimal()
 
 p <- ggplot(Fullertable_ss_select,
-         aes(BatchName, top100_reads_pc, fill =  BatchName))
+            aes(BatchName, Assigned_pc, fill =  BatchName))
+p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fullertable_control_select,
+            aes(BatchType, Assigned, fill =  BatchType))
+p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
+  angle = 45,
+  hjust = 1,
+  vjust = 0.9
+),
+axis.title.x = element_blank())
+
+p <- ggplot(Fullertable_control_select,
+            aes(BatchType, Assigned_pc, fill =  BatchType))
+p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
+  angle = 45,
+  hjust = 1,
+  vjust = 0.9),
+  axis.title.x = element_blank())
+
+# Boxplots for unassigned ambiguity:
+p <- ggplot(Fullertable_ss_select,
+            aes(BatchName, Unassigned_Ambiguity , fill =  BatchName))
+p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fullertable_ss_select,
+            aes(BatchName, Ambiguity_pc, fill =  BatchName))
+p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fullertable_control_select,
+            aes(BatchType, Unassigned_Ambiguity, fill =  BatchType))
+p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
+  angle = 45,
+  hjust = 1,
+  vjust = 0.9
+),
+axis.title.x = element_blank())
+
+p <- ggplot(Fullertable_control_select,
+            aes(BatchType, Ambiguity_pc, fill =  BatchType))
+p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
+  angle = 45,
+  hjust = 1,
+  vjust = 0.9),
+  axis.title.x = element_blank())
+
+p <- ggplot(Fullertable_ss_select,
+            aes(Sample, Unmapped_pc, fill =  Sample))
+p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fullertable_ss_select,
+            aes(Sample, Genes1tpm, fill =  Sample))
+p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fullertable_ss_select,
+            aes(Sample, top100_reads_pc, fill =  Sample))
+p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fullertable_ss_select,
+            aes(Sample, Unmapped_pc, fill =  Sample))
+p + geom_boxplot() + theme_minimal()
+
+
+
+#Boxplots for single cell stages and single cell diffs
+p <- ggplot(Fullertable_ss_select,
+            aes(Stage, RawReads, fill =  Stage))
+p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_blank())
+
+p <- ggplot(Fullertable_ss_select,
+            aes(Stage, top100_reads_pc, fill =  Stage))
+p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_blank())
+
+p <- ggplot(Fullertable_ss_select,
+            aes(Stage, Genes1tpm, fill =  Stage))
+p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_blank())
+
+p <- ggplot(Fullertable_ss_select,
+            aes(Differentiation, RawReads, fill =  Differentiation))
+p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_blank())
+
+p <- ggplot(Fullertable_ss_select,
+            aes(Differentiation, top100_reads_pc, fill =  Differentiation))
+p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_blank())
+
+p <- ggplot(Fullertable_ss_select,
+            aes(Differentiation, Genes1tpm, fill =  Differentiation))
+p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_blank())
+
+#Boxplots for control stages, select control first
+Fullertable_control_select$typeStage <- paste(Fullertable_control_select$sampleType, 
+                                              Fullertable_control_select$Stage, sep = '_')
+p <- ggplot(Fullertable_control_select,
+            aes(typeStage, RawReads, fill =  typeStage))
+p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_blank())
+
+p <- ggplot(Fullertable_control_select,
+            aes(typeStage, top100_reads_pc, fill =  typeStage))
+p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_blank())
+
+p <- ggplot(Fullertable_control_select,
+            aes(typeStage, Genes1tpm, fill =  typeStage))
+p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_blank())
+
+# Do the same you did for stages with differentiations
+Fullertable_control_select$typeDiff <- paste(Fullertable_control_select$sampleType, 
+                                              Fullertable_control_select$Differentiation, sep = '_')
+
+p <- ggplot(Fullertable_control_select,
+            aes(typeDiff, RawReads, fill =  typeDiff))
+p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_blank())
+
+p <- ggplot(Fullertable_control_select,
+            aes(typeDiff, top100_reads_pc, fill =  typeDiff))
+p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_blank())
+
+p <- ggplot(Fullertable_control_select,
+            aes(typeDiff, Genes1tpm, fill =  typeDiff))
+p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_blank())
+
+#Boxplots for sample types
+p <- ggplot(Fullertable,
+            aes(sampleType, Genes1tpm, fill =  sampleType))
+p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fullertable,
+            aes(sampleType, Assigned_pc, fill =  sampleType))
+p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fullertable,
+            aes(sampleType, top100_reads_pc, fill =  sampleType))
+p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fullertable,
+            aes(sampleType, RawReads, fill =  sampleType))
 p + geom_boxplot() + theme_minimal()
 
 

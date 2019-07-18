@@ -3,7 +3,7 @@
 # Then move the results to local pc for Rstudio merging in 2.large_table.R
 
 #Input is a "xxx.gene.tpm.tsv" file
-#Output is a table of cell sample names and the number of transcripts per million 
+#Output is a table of cell sample names and the number of transcripts per million
 #Automate this to do it for multiple files using the .sh script on /well/mccarthy/users/maxlouis
 
 calc_1tpm <- function(inFile, outFile) {

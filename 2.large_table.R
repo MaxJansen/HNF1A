@@ -392,9 +392,11 @@ for (i in 1:length(raw_count_files))
          read.csv(raw_count_files[i], header =
                     FALSE))
 
-#Make a list of df's to edit all at once later
+### Note 18-07-2019: Redo merging from here ###
+### I renamed tpm_batch1_and2 to batch1
+# Make a list of df's to edit all at once later
 tpm.list <-
-  list(tpm_batch1_and_2.txt,
+  list(tpm_batch1.txt,
        tpm_batch2.txt,
        tpm_batch3.txt,
        tpm_batch4.txt)
@@ -404,9 +406,11 @@ colnames(tpm_df) <- c("Name", "Genes1tpm")
 tpm_df$Genes1tpm <- as.numeric(as.character(tpm_df$Genes1tpm))
 tpm_df <- aggregate(Genes1tpm ~ Name, data = tpm_df, FUN = mean)
 tpm_df$Name <- as.character(tpm_df$Name)
+
+# Gene_counts are library complexity 
 gene_counts_list <-
   list(
-    gene_counts_batch1_and_2.txt,
+    gene_counts_batch1.txt,
     gene_counts_batch2.txt,
     gene_counts_batch3.txt,
     gene_counts_batch4.txt
@@ -419,6 +423,8 @@ gene_counts_df$top100_reads_pc <-
   as.numeric(as.character(gene_counts_df$top100_reads_pc))
 gene_counts_df <-
   aggregate(top100_reads_pc ~ Name, data = gene_counts_df, FUN = mean)
+
+# Gene_1read are the genes with at least one read per cell
 
 Fullerbatch <- merge(Fulltable,
         tpm_df,
@@ -433,16 +439,11 @@ Fullertable <-merge(
     all.x = TRUE
   )
 
-
-
-
 # Make columns for better plotting:
 Fullertable$cellLine <- Fullertable$Name
 Fullertable$cellLine <- strsplit(Fullertable$cellLine, '.X')
 Fullertable$Stage <- lapply(Fullertable$cellLine, `[[`, 2)
 Fullertable$Stage <- unlist(Fullertable$Stage)
-
-
 
 Fullertable$Stage <- as.character(Fullertable$Stage)
 Fullertable$Stage <- strsplit(Fullertable$Stage, "[.]")

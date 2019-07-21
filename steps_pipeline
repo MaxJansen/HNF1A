@@ -1,7 +1,6 @@
 module load java/1.8.0_latest
 module load samtools
-#Find a way to make cutadapt work
-/apps/well/python/3.5.2-gcc5.4.0/bin
+module load /apps/well/python/3.5.2-gcc5.4.0/
 
 perl  /well/mccarthy/production/rna-seq/code/scRNA_pipeline/1.trim_map_dups.pl -d StemBANCC/HNF1A_scRNA_Max/Batch1/180410_K00150_0313_BHTV35BBXX -q c
 perl  /well/mccarthy/production/rna-seq/code/scRNA_pipeline/1.trim_map_dups.pl -d StemBANCC/HNF1A_scRNA_Max/Batch2/180524_K00198_0314_BHV55CBBXX -q c

@@ -80,9 +80,6 @@ for (i in Batches) {
 
 All_batches$RawReads <- as.numeric(All_batches$RawReads)
 
-# Plot raw reads before aggregating
-p <- ggplot(All_batches, aes(Batchname, RawReads, fill =  Batchname))
-p + geom_boxplot() + theme_minimal()
 
 # Do this for trimmed reads as well
 # Import reads from both directions, change working directory accordingly
@@ -236,9 +233,9 @@ create_df_list <- function(directory) {
 }
 
 # Apply function to directories containing Batches
-Batch1and2_df_list <-
-  create_df_list("~/Oxford 2.0/HNF1A/Tables/merged_counts/gene_counts_merged")
-Batch2second_df_list <-
+Batch1_df_list <-
+  create_df_list("~/Oxford 2.0/HNF1A/Tables/merged_counts/gene_counts_Batch1/")
+Batch2_df_list <-
   create_df_list("~/Oxford 2.0/HNF1A/Tables/merged_counts/gene_counts_Batch2/")
 Batch3_df_list <-
   create_df_list("~/Oxford 2.0/HNF1A/Tables/merged_counts/gene_counts_Batch3/")
@@ -268,16 +265,16 @@ format_quant_list <- function(Batch_list) {
 }
 
 #Do this for all batch lists of df's:
-Batch1and2_qdf <- format_quant_list(Batch1and2_df_list)
-Batch2second_qdf <- format_quant_list(Batch2second_df_list)
+Batch1_qdf <- format_quant_list(Batch1_df_list)
+Batch2_qdf <- format_quant_list(Batch2_df_list)
 Batch3_qdf <- format_quant_list(Batch3_df_list)
 Batch4_qdf <- format_quant_list(Batch4_df_list)
 
 # !!! Warning. Some notes on Batch2 and duplicates:
-# Batch2 and Batch2second are duplicates, sum these values and then use (eventually) unique 'Name' column,
-# not the Readnumber column. To do this, convert the batch named Batch2second to Batch2, then aggregate by
+# Batch2 and Batch2second are duplicates, sum their Raw and Trimmed values and then use (eventually) unique 'Name'
+# column, not the Readnumber column. To do this, convert the batch named Batch2second to Batch2, then aggregate by
 # Name + BatchName, to keep the BatchName in the Fulltable.
-# You can do this, because in later steps Batch1and2_qdf will have summed values for the old and new
+# You can do this, because Batch2_qdf will have summed values for the old and new
 # Batch2 summary tables.
 # Batch3 and Batch4 also contain duplicates. Do the same aggregation. These will have the same batchNames
 # for duplicates though.
@@ -286,7 +283,7 @@ Batch4_qdf <- format_quant_list(Batch4_df_list)
 Mastertable$BatchName[Mastertable$BatchName == "Batch2second"] <-
   "Batch2"
 
-# First aggregate RawReads(numeric) for duplicated(Name) rows, then merge.
+# First aggregate RawReads(numeric) for duplicated(Name) rows, merge later.
 Mastertable$Name <- gsub("-", ".", Mastertable$Name)
 Mastertable$RawReads <- as.numeric(Mastertable$RawReads)
 Mastertable_agg <-
@@ -315,7 +312,7 @@ p + geom_boxplot() + theme_minimal()
 Fullbatch1 <-
   merge(
     Mastertable_agg[Mastertable_agg$BatchName == "Batch1", ],
-    Batch1and2_qdf,
+    Batch1_qdf,
     by.x = "Name",
     by.y = 0,
     all.x = TRUE
@@ -323,7 +320,7 @@ Fullbatch1 <-
 Fullbatch2 <-
   merge(
     Mastertable_agg[Mastertable_agg$BatchName == "Batch2", ],
-    Batch2second_qdf,
+    Batch2_qdf,
     by.x = "Name",
     by.y = 0,
     all.x = TRUE
@@ -348,7 +345,7 @@ Fullbatch4 <-
 #Make Fulltable, check it, and then clean it.
 Fulltable <- rbind(Fullbatch1, Fullbatch2, Fullbatch3, Fullbatch4)
 
-#Check : Is RawReads about the same as rowsum?
+#Check : Is TrimReads equal to rowsum?
 Fulltable$RawSum <- rowSums(Fulltable[, 5:15])
 ratio_df <-
   as.data.frame(cbind(Fulltable$TrimReads, Fulltable$RawSum))
@@ -394,7 +391,7 @@ for (i in 1:length(raw_count_files))
 
 ### Note 18-07-2019: Redo merging from here ###
 ### I renamed tpm_batch1_and2 to batch1
-# Make a list of df's to edit all at once later
+# Make a list of df's to edit all at once later, start with gene read transcripts per million
 tpm.list <-
   list(tpm_batch1.txt,
        tpm_batch2.txt,
@@ -404,7 +401,6 @@ tpm_df <- do.call(rbind, tpm.list)
 tpm_df <- as.data.frame(unlist(str_split_fixed(tpm_df[, 1], "\t", 2)))
 colnames(tpm_df) <- c("Name", "Genes1tpm")
 tpm_df$Genes1tpm <- as.numeric(as.character(tpm_df$Genes1tpm))
-tpm_df <- aggregate(Genes1tpm ~ Name, data = tpm_df, FUN = mean)
 tpm_df$Name <- as.character(tpm_df$Name)
 
 # Gene_counts are library complexity 
@@ -421,23 +417,81 @@ gene_counts_df <-
 colnames(gene_counts_df) <- c("Name", "top100_reads_pc")
 gene_counts_df$top100_reads_pc <-
   as.numeric(as.character(gene_counts_df$top100_reads_pc))
-gene_counts_df <-
-  aggregate(top100_reads_pc ~ Name, data = gene_counts_df, FUN = mean)
 
 # Gene_1read are the genes with at least one read per cell
-
-Fullerbatch <- merge(Fulltable,
-        tpm_df,
-        by.x = "Name",
-        by.y = "Name",
-        all.x = TRUE)
-Fullertable <-merge(
-    Fullerbatch,
-    gene_counts_df,
-    by.x = "Name",
-    by.y = "Name",
-    all.x = TRUE
+gene_1read_list <-
+  list(
+    gene_1read_batch1.txt,
+    gene_1read_batch2.txt,
+    gene_1read_batch3.txt,
+    gene_1read_batch4.txt
   )
+gene_1read_df <- do.call(rbind, gene_1read_list)
+gene_1read_df <- 
+  as.data.frame(unlist(str_split_fixed(gene_1read_df[, 1], "\t", 3)[, 2:3]))
+colnames(gene_1read_df) <- c("Name", "gene_1read")
+gene_1read_df$gene_1read <-
+  as.numeric(as.character(gene_1read_df$gene_1read))
+
+### Note 19-07-2019 add readsum ###
+setwd("~/Oxford 2.0/HNF1A/Tables/sumcheck/")
+readsum_files <- list.files(path = ".", pattern = ".txt")
+for (i in 1:length(readsum_files))
+  assign(readsum_files[i],
+         read.csv(readsum_files[i], header =
+                    FALSE))
+readsum.list <-
+  list(Batch1.txt,
+       Batch2.txt,
+       Batch3.txt,
+       Batch4.txt)
+readsum_df <- do.call(rbind, readsum.list)
+readsum_df <- as.data.frame(unlist(str_split_fixed(readsum_df[, 1], "\t", 2)))
+colnames(readsum_df) <- c("Name", "ReadSum")
+readsum_df$ReadSum <- as.numeric(as.character(readsum_df$ReadSum))
+readsum_df$Name <- as.character(readsum_df$Name)
+
+### End of adding readsum ###
+
+Fullerbatch <- merge(
+  Fulltable,
+  tpm_df,
+  by.x = "Name",
+  by.y = "Name",
+  all.x = TRUE
+)
+
+Intertable <- merge(
+  Fullerbatch,
+  gene_1read_df,
+  by.x = "Name",
+  by.y = "Name",
+  all.x = TRUE
+)
+
+Intertable2 <- merge(
+  Intertable,
+  gene_counts_df,
+  by.x = "Name",
+  by.y = "Name",
+  all.x = TRUE
+)
+
+Fullertable <- merge(
+  Intertable2,
+  readsum_df,
+  by.x = "Name",
+  by.y = "Name",
+  all.x = TRUE
+)
+
+#Test: readsum/assigned reads ratio:
+Fullertable$assign_ratio <- Fullertable[, 22]/Fullertable[, 5]
+
+p <- ggplot(Fullertable,
+            aes(BatchName, assign_ratio, fill =  BatchName))
+p + geom_boxplot() + theme_minimal()
+
 
 # Make columns for better plotting:
 Fullertable$cellLine <- Fullertable$Name
@@ -502,7 +556,7 @@ p <- ggplot(Fullertable_ss_select,
 p + geom_boxplot() + theme_minimal()
 
 p <- ggplot(Fullertable_control_select,
-            aes(BatchType, Assigned, fill =  BatchType))
+            aes(BatchType, Assigned, fill =  BatchName))
 p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
   angle = 45,
   hjust = 1,
@@ -511,7 +565,7 @@ p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
 axis.title.x = element_blank())
 
 p <- ggplot(Fullertable_control_select,
-            aes(BatchType, Assigned_pc, fill =  BatchType))
+            aes(BatchType, Assigned_pc, fill =  BatchName))
 p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
   angle = 45,
   hjust = 1,
@@ -656,8 +710,23 @@ p + geom_boxplot() + theme_minimal()
 ### End of by correction ###
 
 ### Per sample ###
+# Make some changes for boxplot aesthetics:
+# Clip off '_single cell' from name. 
+
+Fullertable_ss_select$Sample <- gsub("_", " ", Fullertable_ss_select$Sample)
+Fullertable_ss_select$Sample <- gsub("singlecell", " ", Fullertable_ss_select$Sample)
+Fullertable_ss_select$Sample <- gsub("")
+Pro291fsinsC_row <- Fullertable$cellLine %in% c("SFC012.0420CLN","SFC012.0420CL4")
+Fullertable$Correction[Pro291fsinsC_row] <- "Pro291fsinsC/+" 
+Corrected_row <- Fullertable$cellLine %in% c("SFC012.C14222", "SFC012.N19218")
+Fullertable$Correction[Corrected_row] <- "Corrected/+"
+
+plot(Fullertable$Genes1tpm, Fullertable$top100_reads_pc)
+plot(Fullertable$Genes1tpm, Fullertable$Assigned)
+plot(Fullertable$Genes1tpm, Fullertable$gene_1read)
+
 p <- ggplot(Fullertable_ss_select,
-            aes(Sample, TrimReads, fill =  Sample))
+            aes(Sample, TrimReads, fill =  BatchName))
 p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
   angle = 90,
   hjust = 1,
@@ -665,7 +734,7 @@ p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
   axis.title.x = element_blank())
 
 p <- ggplot(Fullertable_ss_select,
-            aes(Sample, Genes1tpm, fill =  Sample))
+            aes(Sample, Genes1tpm, fill =  BatchName))
 p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
   angle = 90,
   hjust = 1,
@@ -673,9 +742,17 @@ p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
   axis.title.x = element_blank())
 
 p <- ggplot(Fullertable_ss_select,
-            aes(Sample, top100_reads_pc, fill =  Sample))
+            aes(Sample, top100_reads_pc, fill =  BatchName))
 p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
   angle = 90,
+  hjust = 1,
+  vjust = 0.9),
+  axis.title.x = element_blank())
+
+p <- ggplot(Fullertable_ss_select,
+            aes(Sample, Assigned_pc, fill =  BatchName))
+p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
+  angle = 45,
   hjust = 1,
   vjust = 0.9),
   axis.title.x = element_blank())

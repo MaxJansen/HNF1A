@@ -234,13 +234,13 @@ create_df_list <- function(directory) {
 
 # Apply function to directories containing Batches
 Batch1_df_list <-
-  create_df_list("~/Oxford 2.0/HNF1A/Tables/merged_counts/gene_counts_Batch1/")
+  create_df_list("~/Oxford 2.0/HNF1A/Tables/merged_counts2/gene_counts_Batch1/")
 Batch2_df_list <-
-  create_df_list("~/Oxford 2.0/HNF1A/Tables/merged_counts/gene_counts_Batch2/")
+  create_df_list("~/Oxford 2.0/HNF1A/Tables/merged_counts2/gene_counts_Batch2/")
 Batch3_df_list <-
-  create_df_list("~/Oxford 2.0/HNF1A/Tables/merged_counts/gene_counts_Batch3/")
+  create_df_list("~/Oxford 2.0/HNF1A/Tables/merged_counts2/gene_counts_Batch3/")
 Batch4_df_list <-
-  create_df_list("~/Oxford 2.0/HNF1A/Tables/merged_counts/gene_counts_Batch4/")
+  create_df_list("~/Oxford 2.0/HNF1A/Tables/merged_counts2/gene_counts_Batch4/")
 
 # The 4 lists of dataframes must be formatted for merging.
 # Function splits columns and transposes df's:
@@ -434,7 +434,7 @@ gene_1read_df$gene_1read <-
   as.numeric(as.character(gene_1read_df$gene_1read))
 
 ### Note 19-07-2019 add readsum ###
-setwd("~/Oxford 2.0/HNF1A/Tables/sumcheck/")
+setwd("~/Oxford 2.0/HNF1A/Tables/sumcheck2/")
 readsum_files <- list.files(path = ".", pattern = ".txt")
 for (i in 1:length(readsum_files))
   assign(readsum_files[i],

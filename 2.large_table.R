@@ -205,7 +205,7 @@ Mastertable$TrimRaw_pc <- Mastertable[, 6] / Mastertable[, 5]
 
 
 p <- ggplot(Mastertable, aes(BatchName, RawReads, fill =  BatchName))
-p + geom_boxplot() + theme_minimal()
+p + geom_boxplot() + theme_minimal() 
 
 p <-
   ggplot(Mastertable, aes(BatchName, TrimReads, fill =  BatchName))
@@ -234,13 +234,13 @@ create_df_list <- function(directory) {
 
 # Apply function to directories containing Batches
 Batch1_df_list <-
-  create_df_list("~/Oxford 2.0/HNF1A/Tables/merged_counts2/gene_counts_Batch1/")
+  create_df_list("~/Oxford 2.0/HNF1A/Tables/merged_counts3/gene_counts_Batch1/")
 Batch2_df_list <-
-  create_df_list("~/Oxford 2.0/HNF1A/Tables/merged_counts2/gene_counts_Batch2/")
+  create_df_list("~/Oxford 2.0/HNF1A/Tables/merged_counts3/gene_counts_Batch2/")
 Batch3_df_list <-
-  create_df_list("~/Oxford 2.0/HNF1A/Tables/merged_counts2/gene_counts_Batch3/")
+  create_df_list("~/Oxford 2.0/HNF1A/Tables/merged_counts3/gene_counts_Batch3/")
 Batch4_df_list <-
-  create_df_list("~/Oxford 2.0/HNF1A/Tables/merged_counts2/gene_counts_Batch4/")
+  create_df_list("~/Oxford 2.0/HNF1A/Tables/merged_counts3/gene_counts_Batch4/")
 
 # The 4 lists of dataframes must be formatted for merging.
 # Function splits columns and transposes df's:
@@ -290,21 +290,31 @@ Mastertable_agg <-
   aggregate(cbind(RawReads, TrimReads) ~ Name + BatchName, data = Mastertable, FUN = sum)
 
 # Plot aggregated RawReads:
-p <- ggplot(Mastertable_agg, aes(BatchName, RawReads, fill =  BatchName))
-p + geom_boxplot() + theme_minimal()
+p <-
+  ggplot(Mastertable_agg, aes(BatchName, RawReads, fill =  BatchName))
+p + geom_boxplot() + theme_minimal() + labs(x = "Batch", y = "Reads") +  theme(
+  axis.title.x = element_text(size = 20),
+  axis.title.y = element_text(size = 20)
+)  
 
 # Select controls and SC to see batch differences
 Master_agg_control_select <-
   Mastertable_agg[grep("singlecell", Mastertable_agg$Name, invert = TRUE ), ]
 
 p <- ggplot(Master_agg_control_select, aes(BatchName, RawReads, fill =  BatchName))
-p + geom_boxplot() + theme_minimal()
+p + geom_boxplot() + theme_minimal() + labs(x = "Batch", y = "Reads") +  theme(
+  axis.title.x = element_text(size = 20),
+  axis.title.y = element_text(size = 20)
+)  
 
 Master_agg_ss_select <-
   Mastertable_agg[grep("singlecell", Mastertable_agg$Name), ]
 
 p <- ggplot(Master_agg_ss_select, aes(BatchName, RawReads, fill =  BatchName))
-p + geom_boxplot() + theme_minimal()
+p + geom_boxplot() + theme_minimal() + labs(x = "Batch", y = "Reads") +  theme(
+  axis.title.x = element_text(size = 20),
+  axis.title.y = element_text(size = 20)
+)  
 
 
 
@@ -434,7 +444,7 @@ gene_1read_df$gene_1read <-
   as.numeric(as.character(gene_1read_df$gene_1read))
 
 ### Note 19-07-2019 add readsum ###
-setwd("~/Oxford 2.0/HNF1A/Tables/sumcheck2/")
+setwd("~/Oxford 2.0/HNF1A/Tables/sumcheck3/")
 readsum_files <- list.files(path = ".", pattern = ".txt")
 for (i in 1:length(readsum_files))
   assign(readsum_files[i],
@@ -490,7 +500,11 @@ Fullertable$assign_ratio <- Fullertable[, 22]/Fullertable[, 5]
 
 p <- ggplot(Fullertable,
             aes(BatchName, assign_ratio, fill =  BatchName))
-p + geom_boxplot() + theme_minimal()
+p + geom_boxplot() + theme_minimal() + labs(x = "Batch", y = "ColSum/Assigned Reads ratio") +  theme(
+  axis.title.x = element_text(size = 20),
+  axis.title.y = element_text(size = 20)
+)  
+
 
 
 # Make columns for better plotting:
@@ -541,8 +555,8 @@ Fullertable_ss_select <-
   Fullertable[grep("singlecell", Fullertable$sampleType), ]
 Fullertable_control_select <-
   Fullertable[grep("singlecell", Fullertable$sampleType, invert = TRUE), ]
-Fullertable_control_select$BatchType <- paste(Fullertable_control_select$BatchName, 
-                                              Fullertable_control_select$sampleType, sep = ' ')
+Fullertable_control_select$TypeBatch <- paste(Fullertable_control_select$sampleType,
+                                              Fullertable_control_select$BatchName, sep = ' ')
 
 ### Boxplots per Batch ###
 
@@ -553,7 +567,10 @@ p + geom_boxplot() + theme_minimal()
 
 p <- ggplot(Fullertable_ss_select,
             aes(BatchName, Assigned_pc, fill =  BatchName))
-p + geom_boxplot() + theme_minimal()
+p + geom_boxplot() + theme_minimal() + labs(x = "Batch", y = "Assigned %") +  theme(
+  axis.title.x = element_text(size = 20),
+  axis.title.y = element_text(size = 20)
+)  
 
 p <- ggplot(Fullertable_control_select,
             aes(BatchType, Assigned, fill =  BatchName))
@@ -565,12 +582,15 @@ p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
 axis.title.x = element_blank())
 
 p <- ggplot(Fullertable_control_select,
-            aes(BatchType, Assigned_pc, fill =  BatchName))
+            aes(TypeBatch, Assigned_pc, fill =  BatchName))
 p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
   angle = 45,
   hjust = 1,
   vjust = 0.9),
-  axis.title.x = element_blank())
+  axis.title.x = element_blank()) + labs(x = "Batch", y = "Assigned %") +  theme(
+    axis.title.x = element_text(size = 20),
+    axis.title.y = element_text(size = 20)
+  )
 
 # Boxplots for unassigned ambiguity:
 p <- ggplot(Fullertable_ss_select,
@@ -579,7 +599,10 @@ p + geom_boxplot() + theme_minimal()
 
 p <- ggplot(Fullertable_ss_select,
             aes(BatchName, Ambiguity_pc, fill =  BatchName))
-p + geom_boxplot() + theme_minimal()
+p + geom_boxplot() + theme_minimal() + labs(x = "Batch", y = "Unassigned Ambiguity %") +  theme(
+  axis.title.x = element_text(size = 20),
+  axis.title.y = element_text(size = 20), legend.position = "none"
+)  
 
 p <- ggplot(Fullertable_control_select,
             aes(BatchType, Unassigned_Ambiguity, fill =  BatchType))
@@ -591,12 +614,17 @@ p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
 axis.title.x = element_blank())
 
 p <- ggplot(Fullertable_control_select,
-            aes(BatchType, Ambiguity_pc, fill =  BatchType))
-p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
-  angle = 45,
-  hjust = 1,
-  vjust = 0.9),
-  axis.title.x = element_blank())
+            aes(TypeBatch, Ambiguity_pc, fill =  BatchName))
+p + geom_boxplot() + theme_minimal() + labs(x = "Batch", y = "Unassigned Ambiguity %") + theme(
+  axis.title.y = element_text(size = 18),
+  legend.position = "none",
+  axis.text.x = element_text(
+    angle = 45,
+    hjust = 1,
+    vjust = 0.9
+  ),
+  axis.title.x = element_blank()
+)
 
 # Boxplots for No Features:
 p <- ggplot(Fullertable_ss_select,
@@ -605,11 +633,15 @@ p + geom_boxplot() + theme_minimal()
 
 p <- ggplot(Fullertable_ss_select,
             aes(BatchName, NoFeatures_pc, fill =  BatchName))
-p + geom_boxplot() + theme_minimal()
+p + geom_boxplot() + theme_minimal() + labs(x = "Batch", y = "No Features %") +  theme(
+  axis.title.x = element_text(size = 20),
+  axis.title.y = element_text(size = 20), legend.position = "none"
+)
 
 p <- ggplot(Fullertable_control_select,
-            aes(BatchType, Unassigned_NoFeatures, fill =  BatchType))
-p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
+            aes(TypeBatch, Unassigned_NoFeatures, fill =  BatchName))
+p + geom_boxplot() + theme_minimal() + labs(x = "Batch", y = "No Features %") + theme(
+  axis.text.x = element_text(
   angle = 45,
   hjust = 1,
   vjust = 0.9
@@ -617,12 +649,16 @@ p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
 axis.title.x = element_blank())
 
 p <- ggplot(Fullertable_control_select,
-            aes(BatchType, NoFeatures_pc, fill =  BatchType))
-p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
+            aes(TypeBatch, NoFeatures_pc, fill =  BatchName))
+p + geom_boxplot() + theme_minimal() + labs(x = "Batch", y = "No Features %") + theme(
+  axis.title.y = element_text(size = 18),
+  legend.position = "none",
+  axis.text.x = element_text(
   angle = 45,
   hjust = 1,
-  vjust = 0.9),
-  axis.title.x = element_blank())
+  vjust = 0.9
+),
+axis.title.x = element_blank())
 
 # Boxplots for Unmapped:
 p <- ggplot(Fullertable_ss_select,
@@ -632,6 +668,13 @@ p + geom_boxplot() + theme_minimal()
 p <- ggplot(Fullertable_ss_select,
             aes(BatchName, Unmapped_pc, fill =  BatchName))
 p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fullertable_ss_select,
+            aes(BatchName, Unmapped_pc, fill =  BatchName))
+p + geom_boxplot() + theme_minimal() + labs(x = "Batch", y = "Unmapped %") +  theme(
+  axis.title.x = element_text(size = 20),
+  axis.title.y = element_text(size = 20), legend.position = "none"
+)
 
 p <- ggplot(Fullertable_control_select,
             aes(BatchType, Unassigned_Unmapped, fill =  BatchType))
@@ -643,8 +686,11 @@ p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
 axis.title.x = element_blank())
 
 p <- ggplot(Fullertable_control_select,
-            aes(BatchType, Unmapped_pc, fill =  BatchType))
-p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
+            aes(TypeBatch, Unmapped_pc, fill =  BatchName))
+p + geom_boxplot() + theme_minimal() + labs(x = "Batch", y = "Unmapped %") + theme(
+  axis.title.y = element_text(size = 18),
+  legend.position = "none",
+  axis.text.x = element_text(
   angle = 45,
   hjust = 1,
   vjust = 0.9),
@@ -653,20 +699,29 @@ p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
 # gene count data: 1TPM and %top100
 p <- ggplot(Fullertable_ss_select,
             aes(BatchName, Genes1tpm, fill =  BatchName))
-p + geom_boxplot() + theme_minimal() 
+p + geom_boxplot() + theme_minimal() + labs(x = "Batch", y = "Genes 1TPM") +  theme(
+  axis.title.x = element_text(size = 20),
+  axis.title.y = element_text(size = 20), legend.position = "none"
+)
 
 p <- ggplot(Fullertable_control_select,
-            aes(BatchType, Genes1tpm, fill =  BatchType))
-p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
-  angle = 45,
-  hjust = 1,
-  vjust = 0.9),
+            aes(TypeBatch, Genes1tpm, fill =  BatchName))
+p + geom_boxplot() + theme_minimal() + labs(x = "Batch", y = "Genes1TPM") + theme(
+  axis.title.y = element_text(size = 18),
+  legend.position = "none",
+  axis.text.x = element_text(
+    angle = 45,
+    hjust = 1,
+    vjust = 0.9),
   axis.title.x = element_blank())
 
 
 p <- ggplot(Fullertable_ss_select,
             aes(BatchName, top100_reads_pc, fill =  BatchName))
-p + geom_boxplot() + theme_minimal()
+p + geom_boxplot() + theme_minimal() + labs(x = "Batch", y = "Top 100 reads %") +  theme(
+  axis.title.x = element_text(size = 20),
+  axis.title.y = element_text(size = 20), legend.position = "none"
+)
 
 p <- ggplot(Fullertable_control_select,
             aes(BatchType, top100_reads_pc, fill =  BatchType))
@@ -676,6 +731,16 @@ p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
   vjust = 0.9),
   axis.title.x = element_blank())
 
+p <- ggplot(Fullertable_control_select,
+            aes(TypeBatch, top100_reads_pc, fill =  BatchName))
+p + geom_boxplot() + theme_minimal() + labs(x = "Batch", y = "Top 100 reads %") + theme(
+  axis.title.y = element_text(size = 18),
+  legend.position = "none",
+  axis.text.x = element_text(
+    angle = 45,
+    hjust = 1,
+    vjust = 0.9),
+  axis.title.x = element_blank())
 ### End of per batch boxplots ###
 
 ### By correction ### 
@@ -684,6 +749,13 @@ p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
 p <- ggplot(Fullertable_ss_select,
             aes(Correction, TrimReads, fill =  Correction))
 p + geom_boxplot() + theme_minimal()
+
+p <- ggplot(Fullertable_ss_select,
+            aes(BatchName, TrimReads, fill =  BatchName))
+p + geom_boxplot() + theme_minimal() + labs(x = "Batch", y = "Top 100 reads %") +  theme(
+  axis.title.x = element_text(size = 20),
+  axis.title.y = element_text(size = 20), legend.position = "none"
+)
 
 p <- ggplot(Fullertable_control_select,
             aes(Correction, TrimReads, fill =  Correction))

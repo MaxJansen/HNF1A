@@ -696,7 +696,7 @@ p + geom_boxplot() + theme_minimal() + labs(x = "Batch", y = "Unmapped %") + the
   vjust = 0.9),
   axis.title.x = element_blank())
 
-# gene count data: 1TPM and %top100
+# gene count data: 1TPM, gene_1read and %top100
 p <- ggplot(Fullertable_ss_select,
             aes(BatchName, Genes1tpm, fill =  BatchName))
 p + geom_boxplot() + theme_minimal() + labs(x = "Batch", y = "Genes 1TPM") +  theme(
@@ -707,6 +707,24 @@ p + geom_boxplot() + theme_minimal() + labs(x = "Batch", y = "Genes 1TPM") +  th
 p <- ggplot(Fullertable_control_select,
             aes(TypeBatch, Genes1tpm, fill =  BatchName))
 p + geom_boxplot() + theme_minimal() + labs(x = "Batch", y = "Genes1TPM") + theme(
+  axis.title.y = element_text(size = 18),
+  legend.position = "none",
+  axis.text.x = element_text(
+    angle = 45,
+    hjust = 1,
+    vjust = 0.9),
+  axis.title.x = element_blank())
+
+p <- ggplot(Fullertable_ss_select,
+            aes(BatchName, gene_1read, fill =  BatchName))
+p + geom_boxplot() + theme_minimal() + labs(x = "Batch", y = "Genes 1 read") +  theme(
+  axis.title.x = element_text(size = 20),
+  axis.title.y = element_text(size = 20), legend.position = "none"
+)
+
+p <- ggplot(Fullertable_control_select,
+            aes(TypeBatch, gene_1read, fill =  BatchName))
+p + geom_boxplot() + theme_minimal() + labs(x = "Batch", y = "Genes 1 read") + theme(
   axis.title.y = element_text(size = 18),
   legend.position = "none",
   axis.text.x = element_text(
@@ -764,20 +782,40 @@ p + geom_boxplot() + theme_minimal()
 # Genes > 1TPM
 p <- ggplot(Fullertable_ss_select,
             aes(Correction, Genes1tpm, fill =  Correction))
-p + geom_boxplot() + theme_minimal()
+p + geom_boxplot() + theme_minimal() + labs(x = "Correction", y = "Genes 1TPM") +  theme(
+  axis.title.x = element_text(size = 20),
+  axis.title.y = element_text(size = 20), legend.position = "none"
+)
 
 p <- ggplot(Fullertable_control_select,
             aes(Correction, Genes1tpm, fill =  Correction))
-p + geom_boxplot() + theme_minimal()
+p + geom_boxplot() + theme_minimal() + labs(x = "Correction", y = "Genes1TPM") + theme(
+  axis.title.y = element_text(size = 18),
+  legend.position = "none",
+  axis.text.x = element_text(
+    angle = 45,
+    hjust = 1,
+    vjust = 0.9),
+  axis.title.x = element_blank())
 
 # Top 100
 p <- ggplot(Fullertable_ss_select,
             aes(Correction, top100_reads_pc, fill =  Correction))
-p + geom_boxplot() + theme_minimal()
+p + geom_boxplot() + theme_minimal() + labs(x = "Correction", y = "Top 100 reads %") +  theme(
+  axis.title.x = element_text(size = 20),
+  axis.title.y = element_text(size = 20), legend.position = "none"
+)
 
 p <- ggplot(Fullertable_control_select,
             aes(Correction, top100_reads_pc, fill =  Correction))
-p + geom_boxplot() + theme_minimal()
+p + geom_boxplot() + theme_minimal() + labs(x = "Correction", y = "Top 100 reads %") + theme(
+  axis.title.y = element_text(size = 18),
+  legend.position = "none",
+  axis.text.x = element_text(
+    angle = 45,
+    hjust = 1,
+    vjust = 0.9),
+  axis.title.x = element_blank())
 
 ### End of by correction ###
 
@@ -786,12 +824,15 @@ p + geom_boxplot() + theme_minimal()
 # Clip off '_single cell' from name. 
 
 Fullertable_ss_select$Sample <- gsub("_", " ", Fullertable_ss_select$Sample)
-Fullertable_ss_select$Sample <- gsub("singlecell", " ", Fullertable_ss_select$Sample)
-Fullertable_ss_select$Sample <- gsub("")
-Pro291fsinsC_row <- Fullertable$cellLine %in% c("SFC012.0420CLN","SFC012.0420CL4")
-Fullertable$Correction[Pro291fsinsC_row] <- "Pro291fsinsC/+" 
-Corrected_row <- Fullertable$cellLine %in% c("SFC012.C14222", "SFC012.N19218")
-Fullertable$Correction[Corrected_row] <- "Corrected/+"
+Fullertable_ss_select$Sample <- gsub(" singlecell", "", Fullertable_ss_select$Sample)
+test <- str_split_fixed(Fullertable_ss_select$Sample, " ", 3)[, c(2,3,1)]
+cols <- cbind(test[, 1] , test[, 2], test[, 3])
+Fullertable_ss_select$Sample <- apply(cols , 1 , paste , collapse = " " )
+
+Fullertable_ss_select$Sample <- gsub("SFC012.0420CLN", "MODY1", Fullertable_ss_select$Sample)
+Fullertable_ss_select$Sample <- gsub("SFC012.0420CL4", "MODY2", Fullertable_ss_select$Sample)
+Fullertable_ss_select$Sample <- gsub("SFC012.C14222", "GE1", Fullertable_ss_select$Sample)
+Fullertable_ss_select$Sample <- gsub("SFC012.N19218", "GE2", Fullertable_ss_select$Sample)
 
 plot(Fullertable$Genes1tpm, Fullertable$top100_reads_pc)
 plot(Fullertable$Genes1tpm, Fullertable$Assigned)
@@ -799,7 +840,9 @@ plot(Fullertable$Genes1tpm, Fullertable$gene_1read)
 
 p <- ggplot(Fullertable_ss_select,
             aes(Sample, TrimReads, fill =  BatchName))
-p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
+p + geom_boxplot() + theme_minimal() + labs(y = "Trimmed Reads") + theme(
+  axis.title.y = element_text(size = 18),
+  axis.text.x = element_text(
   angle = 90,
   hjust = 1,
   vjust = 0.9),
@@ -807,7 +850,9 @@ p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
 
 p <- ggplot(Fullertable_ss_select,
             aes(Sample, Genes1tpm, fill =  BatchName))
-p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
+p + geom_boxplot() + theme_minimal() + labs(y = "Genes > 1 TPM") + theme(
+  axis.title.y = element_text(size = 18),
+  axis.text.x = element_text(
   angle = 90,
   hjust = 1,
   vjust = 0.9),
@@ -815,7 +860,9 @@ p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
 
 p <- ggplot(Fullertable_ss_select,
             aes(Sample, top100_reads_pc, fill =  BatchName))
-p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
+p + geom_boxplot() + theme_minimal() + labs(y = "Top 100 Reads %") + theme(
+  axis.title.y = element_text(size = 18),
+  axis.text.x = element_text(
   angle = 90,
   hjust = 1,
   vjust = 0.9),
@@ -823,8 +870,10 @@ p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
 
 p <- ggplot(Fullertable_ss_select,
             aes(Sample, Assigned_pc, fill =  BatchName))
-p + geom_boxplot() + theme_minimal() + theme(axis.text.x = element_text(
-  angle = 45,
+p + geom_boxplot() + theme_minimal() + labs(y = "Top 100 Reads %") + theme(
+  axis.title.y = element_text(size = 18),
+  axis.text.x = element_text(
+  angle = 90,
   hjust = 1,
   vjust = 0.9),
   axis.title.x = element_blank())

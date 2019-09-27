@@ -1,0 +1,8 @@
+This directory is made for sumcheck.
+Sumcheck takes the sum of all read counts for all genes from a given cell. (colsum of *.gene.counts.tsv).
+It also takes the assigned reads from .summary files.
+One would expect the colsum to be equal to the assigned reads.
+The actual checking and comparing of the ratio happens locally. This directory will be used to sum the values from the 4 .gene.counts.tsv files.
+
+The gene.counts.tsv-files that were used as input were created with a pipeline that
+was tested multiple times. Sumcheck3 is the most recent one and should be used.

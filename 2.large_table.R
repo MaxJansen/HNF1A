@@ -197,7 +197,7 @@ Mastertable$Name <- gsub('SM="', "", Mastertable$Name)
 Mastertable$Name <- gsub('"', "", Mastertable$Name)
 
 # Test to see if unique within batches. Answer: No.
-# They are unique between batches, see quick_check_unique.R script for proof!
+# They are unique between batches, see Legacy/quick_check_unique.R script for proof!
 
 # A table of RawReads and Trimmed reads before Batch2 and Batch2second are aggregated:
 Mastertable$TrimReads <- as.numeric(Mastertable$TrimReads)

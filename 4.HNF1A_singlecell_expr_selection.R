@@ -34,5 +34,9 @@ Rawreadselect$Name
 unique(Rawreadselect$cellLine)
 
 Selected_list <- Rawreadselect$Name
+
+# This is the metadata for the selected single cells
 write.table(Rawreadselect, file = "sc_filtered_metadata.txt")
+
+# This is a list of single cells names, the same cells as in the previous metadata file
 write.csv(Selected_list, file = "filtered_sc_names.txt")

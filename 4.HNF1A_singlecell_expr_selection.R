@@ -6,7 +6,7 @@
 library(dplyr)
 
 # Go to directory
-#setwd("~/Oxford 2.0/HNF1A/Tables/")
+setwd("~/Oxford 2.0/HNF1A/Tables/")
 
 # Get the tables
 Fullertable <- read.table("Fullertable.txt", header = T)
@@ -34,5 +34,5 @@ Rawreadselect$Name
 unique(Rawreadselect$cellLine)
 
 Selected_list <- Rawreadselect$Name
-
+write.table(Rawreadselect, file = "sc_filtered_metadata.txt")
 write.csv(Selected_list, file = "filtered_sc_names.txt")

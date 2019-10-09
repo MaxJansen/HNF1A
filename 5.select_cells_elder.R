@@ -19,4 +19,5 @@ filtered_sc <-
 
 # Use the names of cells that passed the thresholds, then select. Dont' forget the GeneName col!
 filtered_sc <- filtered_sc[,2]
-sc_filter_geneexpr <- sc_full_table[,c(1,(colnames(sc_full_table) %in% filtered_sc))]
+filtered_names <- colnames(sc_full_table)[colnames(sc_full_table) %in% filtered_sc]
+filtered_table <- sc_full_table[,c("GeneName",filtered_names)]
